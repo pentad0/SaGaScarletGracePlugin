@@ -1,9 +1,11 @@
 ﻿using BepInEx;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 using System;
 using System.Collections;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using UnityEngine.SocialPlatforms;
@@ -21,9 +23,17 @@ public class Plugin : BaseUnityPlugin
         // Plugin startup logic
         Logger = base.Logger;
         Logger.LogInfo($"Plugin {MyPluginInfo.PLUGIN_GUID} is loaded!");
+
         // パッチを有効化する。
-        Harmony.CreateAndPatchAll(typeof(KillReadyGoCountDown));
-        Plugin.Logger.LogDebug($"KillReadyGoCountDown is activated!");
+        new string[] {
+            "KillReadyGoCountDown",
+        }.ToList().ForEach(patchName => {
+            if (Config.Bind("Patces", patchName, true, "Activate or not.").Value)
+            {
+                Harmony.CreateAndPatchAll(Type.GetType("SaGaScarletGracePlugin." + patchName));
+                Logger.LogInfo($"{patchName} is activated!");
+            }
+        });
     }
 }
 public class KillReadyGoCountDown
@@ -32,6 +42,7 @@ public class KillReadyGoCountDown
     [HarmonyPrefix]
     public static bool InitCutChangePrefix(ref BattleManager __instance)
     {
+        Plugin.Logger.LogDebug("InitCutChangePrefix");
         // internal BattleSequence Sequence => sequence;
         // ↑のようなメンバはプロパティなのでFieldではなくPropertyを使う。
         BattleSequence Sequence = Traverse.Create(__instance).Property("Sequence").GetValue<BattleSequence>();
@@ -81,6 +92,7 @@ public class KillReadyGoCountDown
             0,
         });
 
+        // 本来のInitCutChangeは呼び出さない。
         return false;
     }
 }
