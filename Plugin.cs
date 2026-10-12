@@ -28,7 +28,7 @@ public class Plugin : BaseUnityPlugin
         new string[] {
             "KillReadyGoCountDown",
         }.ToList().ForEach(patchName => {
-            if (Config.Bind("Patces", patchName, true, "Activate or not.").Value)
+            if (Config.Bind("Patches", patchName, true, "Activate or not.").Value)
             {
                 Harmony.CreateAndPatchAll(Type.GetType("SaGaScarletGracePlugin." + patchName));
                 Logger.LogInfo($"{patchName} is activated!");
